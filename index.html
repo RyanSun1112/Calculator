@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+    .calculator {
+      max-inline-size: 22rem; 
+      border-radius: 10px; 
+      overflow: hidden; 
+      box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.15), 0px 2px 4px 0px rgba(0, 0, 0, 0.12);
+    }
+    .calculator__display {
+      font-size: 2rem;
+      text-align: end; 
+      background: hsl(202, 11%, 29%);
+      color: hsl(255, 100%, 100%);
+      padding-block-start: 0.25rem;
+      padding-block-end: 0.25rem; 
+      padding-inline-end: 0.75rem;
+    }    
+    .calculator__keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 1px;
+      background: hsl(208, 24%, 74%);
+    }
+    .calculator__key {
+      
+      border: none;
+      padding-block-start: 0.5rem; 
+      padding-block-end: 0.5rem; 
+      padding-inline-start: 1.25rem; 
+      padding-inline-end: 1.25rem; 
+      font-size: 1.5rem;
+    }
+    .calculator__keyactive{
+      background-color:blue;
+      box-shadow: 0px 15px 20px gray;
+      color: #fff;
+      transform: translateY(-7px);
+      
+    }
+    .calculator__key:hover{
+      background-color:lightsteelblue;
+      box-shadow: 0px 15px 20px gray;
+      color: #fff;
+      transform: translateY(-7px);
+      
+    }
+    .calculator__key--operator {
+      background: hsl(208, 25%, 86%);
+    }
+    
+    .calculator__key--enter {
+      grid-column: 4 / 5; 
+      grid-row: 2 / span 4;
+      background:pink;
+      
+    }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+      <div class="calculator__display" >0</div>
+      <div class="calculator__keys">
+        <button class="calculator__key calculator__key--operator"data-action="add">+</button>
+        <button class="calculator__key calculator__key--operator"data-action="subtract">-</button>
+        <button class="calculator__key calculator__key--operator"data-action="multiply">&times;</button>
+        <button class="calculator__key calculator__key--operator" data-action="divide">÷</button>
+        <button class="calculator__key">7</button>
+        <button class="calculator__key">8</button>
+        <button class="calculator__key">9</button>
+        <button class="calculator__key">4</button>
+        <button class="calculator__key">5</button>
+        <button class="calculator__key">6</button>
+        <button class="calculator__key" >1</button>
+        <button class="calculator__key" >2</button>
+        <button class="calculator__key">3</button>
+        <button class="calculator__key">0</button>
+        <button class="calculator__key"data-action="decimal">.</button>
+        <button class="calculator__key" data-action="clear">AC</button>
+        <button class="calculator__key calculator__key--enter" data-action="calculate">=</button>
+      </div>
+    </div>
+    <script>
+
+      const calculate = (n1, operator, n2) => {
+         let result = ''
+      
+          if (operator === 'add') {
+            result = parseFloat(n1) + parseFloat(n2)
+         } else if (operator === 'subtract') {
+            result = parseFloat(n1) - parseFloat(n2)
+          } else if (operator === 'multiply') {
+            result = parseFloat(n1) * parseFloat(n2)
+         } else if (operator === 'divide') {
+           result = parseFloat(n1) / parseFloat(n2)
+          }
+      
+          return result
+        }
+      const calculator = document.querySelector('.calculator');
+      const keys = calculator.querySelector('.calculator__keys');
+      const display = document.querySelector('.calculator__display');
+      
+      
+      keys.addEventListener('click', e => {
+          keys.classList.remove('.calculator__key:hover');
+          keys.classList.add('calculator__keysactive');
+          keys.classList.remove('.calculator__keysactive');
+          keys.classList.add('calculator__key:hover');
+      
+      
+      })
+      keys.addEventListener('click', e => {
+        
+        if (e.target.matches('button')) {
+          const key = e.target;
+          const action = key.dataset.action;//attribute to determine the type of key that is clicked
+          const keyContent = key.textContent;  //property of the clicked key
+          const displayedNum = display.textContent;
+          const previousKeyType = calculator.dataset.previousKeyType;
+          
+          if (!action) {
+            if (
+              displayedNum === '0' ||
+              previousKeyType === 'operator' ||
+              previousKeyType === 'calculate'
+            ) {
+              display.textContent = keyContent // eplace the calculator’s display with the textContent of the clicked key.
+            } else {
+              display.textContent = displayedNum + keyContent
+            }
+            calculator.dataset.previousKeyType = 'number' //we want to replace the displayed number with clicked number
+          }
+
+          if (action === 'decimal') {
+            if (!displayedNum.includes('.')) {
+              display.textContent = displayedNum + '.'
+            } else if (
+              previousKeyType === 'operator' ||
+              previousKeyType === 'calculate'
+            ) {
+              display.textContent = '0.'
+            }
+
+            calculator.dataset.previousKeyType = 'decimal'
+          }
+          
+          if (
+            action === 'add' ||
+            action === 'subtract' ||
+            action === 'multiply' ||
+            action === 'divide'
+            ) {
+              const firstValue = calculator.dataset.firstValue
+              const operator = calculator.dataset.operator
+              const secondValue = displayedNum
+
+              // Note: It's sufficient to check for firstValue and operator because secondValue always exists
+              if (
+                firstValue &&
+                operator &&
+                previousKeyType !== 'operator' &&
+                previousKeyType !== 'calculate'
+              ) {
+                const calcValue = calculate(firstValue, operator, secondValue)
+                display.textContent = calcValue
+                calculator.dataset.firstValue = calcValue
+              } else {
+                calculator.dataset.firstValue = displayedNum
+              }
+
+              key.classList.add('is-depressed')
+              calculator.dataset.previousKeyType = 'operator'
+              calculator.dataset.operator = action
+            }
+            if (action !== 'clear') {
+              const clearButton = calculator.querySelector('[data-action=clear]')
+              clearButton.textContent = 'CE'
+            }
+            if (action == 'clear') {
+              if (key.textContent === 'AC') {
+                calculator.dataset.firstValue = ''
+                calculator.dataset.modValue = ''
+                calculator.dataset.operator = ''
+                calculator.dataset.previousKeyType = ''
+              } else {
+                key.textContent = 'AC'
+              }
+
+              display.textContent = 0
+              calculator.dataset.previousKeyType = 'clear'
+            }
+            
+            if (action === 'calculate') {
+              let firstValue = calculator.dataset.firstValue
+              const operator = calculator.dataset.operator
+              const secondValue = displayedNum
+
+              if (firstValue) {
+                if (previousKeyType === 'calculate') {
+                  firstValue = displayedNum
+                  secondValue = calculator.dataset.modValue
+              }
+
+              display.textContent = calculate(firstValue, operator, secondValue)
+
+              // Set modValue attribute
+              calculator.dataset.modValue = secondValue
+              calculator.dataset.previousKeyType = 'calculate'
+                          
+            }
+            Array.from(key.parentNode.children)
+              .forEach(k => k.classList.remove('is-depressed'));
+            
+        }
+      }
+    })
+    </script>
+</body>
+</html>
+    
